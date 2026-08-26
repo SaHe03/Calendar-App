@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">CalendarApp</string>
+    <string name = "period_Spotty">Spotty</string>
+    <string name = "period_Normal">Normal</string>
+    <string name = "period_Heavy">Heavy</string>
+    <string name = "period_Flooding">Flooding</string>
+    <string name = "period_Expecting">Expecting</string>
+    <string name = "period_Pregnant">Pregnant</string>
+    <string-array name="meridiem_Spinner_Options">
+        <item> AM </item>
+        <item> PM </item>
+    </string-array>
+</resources>

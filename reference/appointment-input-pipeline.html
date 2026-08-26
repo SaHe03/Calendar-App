@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Appointment input pipeline</title><link rel="stylesheet" href="../assets/course.css"></head>
+<body><main>
+<p class="note">CalendarApp Kotlin ? Quick reference</p><h1>Appointment input pipeline</h1>
+<p class="lede">Turn a selected date and two text fields into one in-memory appointment, then refresh the daily presentation.</p>
+<div class="flow"><span>select date</span> ? <span>read inputs</span> ? <span>validate</span> ? <span>construct</span> ? <span>add</span> ? <span>refresh</span></div>
+<h2>Shared callback state</h2><pre><code>private var selectedDateKey: String? = null
+
+// Inside CalendarView listener:
+selectedDateKey = dateKey</code></pre>
+<p>An activity property is visible to both callbacks. <code>null</code> means no date has been selected yet.</p>
+<h2>Mutable storage</h2><pre><code>private val appointments = mutableListOf(
+    Appointment("2026-10-11", "Doctor", "11:30")
+)</code></pre>
+<p><code>val</code> fixes the list reference. <code>MutableList</code> permits changing its contents. This storage disappears when the process restarts.</p>
+<h2>Click-listener skeleton</h2><pre><code>button.setOnClickListener {
+    val dateKey = selectedDateKey
+    val title = titleInput.text.toString().trim()
+    val time = timeInput.text.toString().trim()
+
+    if (dateKey == null) return@setOnClickListener
+    if (title.isBlank() || time.isBlank()) return@setOnClickListener
+
+    appointments.add(Appointment(dateKey, title, time))
+    dailySummaryText.text = buildDailySummary(dateKey)
+}</code></pre>
+<h2>Ownership check</h2><ul><li><code>EditText</code> owns the typed characters.</li><li><code>selectedDateKey</code> remembers the selection between callbacks.</li><li><code>appointments</code> owns appointment records in memory.</li><li><code>buildDailySummary</code> queries records and creates display text.</li><li><code>dailySummaryText</code> presents the result; it is not storage.</li></ul>
+<p><a href="../lessons/0003-add-an-appointment-from-user-input.html">Lesson 0003</a> ? <a href="hybrid-data-model.html">Hybrid model</a> ? <a href="https://developer.android.com/reference/android/widget/Button">Android Button</a> ? <a href="https://kotlinlang.org/docs/collection-write.html">Collection writes</a></p>
+</main></body></html>

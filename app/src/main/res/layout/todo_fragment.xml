@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:calendar="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainOverviewFragment"
+    >
+    <!--text view for displaying the selected date
+        Blue is an appointment color
+    -->
+    <TextView
+        android:id="@+id/idTVDate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:gravity="center"
+        android:padding="8dp"
+        android:text="Current Date"
+        android:textAlignment="center"
+        android:textColor="@color/black"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="?attr/selectableItemBackground"
+        />
+
+    <!-- Add CalendarView to display the Calendar -->
+    <com.kizitonwose.calendar.view.CalendarView
+        android:id="@+id/calendarView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        calendar:cv_dayViewResource="@layout/calendar_day_layout"
+        android:layout_below="@id/idTVDate"
+        android:layout_marginTop="30dp"
+        calendar:cv_daySize="seventhWidth"
+        />
+
+    <LinearLayout
+        android:id="@+id/ToDoSummaryPanel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:layout_below="@id/calendarView"
+        >
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/ToDoSummaryText"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_margin="16dp"
+            android:padding="12dp"
+            android:gravity="start"
+            android:textColor="@color/black"
+            android:textSize="16sp" />
+        <Button
+            android:id="@+id/addNewToDoButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="32dp"
+            android:text="+"
+            />
+    </LinearLayout>
+    <LinearLayout
+        android:id="@+id/toDoEditPanel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:layout_below="@id/calendarView"
+        android:visibility="gone"
+        >
+        <Button
+            android:id="@+id/closeToDoButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right"
+            android:text="X"/>
+        <EditText
+            android:id="@+id/toDoTitleInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:text="What To-Do?"
+            android:inputType="text" />
+        <EditText
+            android:id="@+id/toDoNotesInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:text="Any other notes?"
+            android:inputType="text" />
+        <Button
+            android:id="@+id/addToDoConfirmButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:text="Add To-Do" />
+    </LinearLayout>
+
+</RelativeLayout>

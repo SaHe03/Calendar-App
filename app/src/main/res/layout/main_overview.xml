@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:calendar="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainOverviewFragment"
+    >
+
+    <!--text view for displaying the selected date
+        The green leave it for the selection date in overview
+
+    -->
+    <TextView
+        android:id="@+id/idTVDate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:gravity="center"
+        android:padding="8dp"
+        android:text="Current Date"
+        android:textAlignment="center"
+        android:textColor="@color/black"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="?attr/selectableItemBackground"
+        />
+
+    <!-- Add CalendarView to display the Calendar -->
+    <com.kizitonwose.calendar.view.CalendarView
+        android:id="@+id/calendarView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        calendar:cv_dayViewResource="@layout/calendar_day_layout"
+        android:layout_below="@id/idTVDate"
+        android:layout_marginTop="30dp"
+        calendar:cv_daySize="seventhWidth"
+        />
+    <LinearLayout
+        android:id="@+id/summaryPanel"
+        android:layout_width="match_parent"
+        android:layout_height="250dp"
+        android:layout_below="@id/calendarView"
+        android:orientation="vertical">
+        <TextView
+            android:id="@+id/dailySummaryText"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_margin="16dp"
+            android:padding="12dp"
+            android:gravity="start"
+            android:textColor="@color/black"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+</RelativeLayout>

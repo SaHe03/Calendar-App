@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang=en><head><meta charset=utf-8><meta name=viewport content=width=device-width,initial-scale=1><title>Hybrid calendar data model</title><link rel=stylesheet href=../assets/course.css></head>
+<body><main>
+<p class=note>CalendarApp Kotlin · Quick reference</p>
+<h1>Hybrid calendar data model</h1>
+<p class=lede>Store records by feature; combine matching records when a date is selected.</p>
+<div class=flow><span>Appointments</span><span>Habit checks</span><span>Period logs</span> → <span>filter by date</span> → <span>daily view</span></div>
+<h2>Record types</h2>
+<pre><code>data class Appointment(
+    val dateKey: String,
+    val title: String,
+    val time: String
+)
+
+data class HabitCheck(
+    val dateKey: String,
+    val habitName: String,
+    val complete: Boolean
+)
+
+data class PeriodLog(
+    val dateKey: String,
+    val flow: String,
+    val notes: String
+)</code></pre>
+<h2>Daily query pattern</h2>
+<pre><code>val matchingRecords = records.filter { record ->
+    record.dateKey == selectedDateKey
+}</code></pre>
+<p><code>filter</code> returns matching records without changing the original collection. The daily view owns presentation; feature collections own the data.</p>
+<h2>Habit display</h2><pre><code>val mark = if (habit.complete) &quot;☑&quot; else &quot;☐&quot;
+val row = &quot;$mark ${habit.habitName}&quot;</code></pre><p>Incomplete and unrecorded intentionally share the unchecked state.</p><p><a href=../lessons/0003-boolean-to-habit-mark.html>Lesson 0003</a> · <a href=../lessons/0002-combine-feature-records-by-date.html>Lesson 0002</a> · <a href=https://kotlinlang.org/docs/data-classes.html>Kotlin data classes</a> · <a href=https://kotlinlang.org/docs/collection-filtering.html>Kotlin filtering</a></p>
+</main></body></html>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="neon_green">#00FF00</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="appointment_Tag_Color">#1976D2</color>
+    <color name="period_Tag_Color">#C9042B</color>
+    <color name="period_Spotty_Color">#AB4B52</color>
+    <color name="period_Normal_Color">#FF0000</color>
+    <color name="period_Heavy_Color">#930000</color>
+    <color name="period_Flooding_Color">#4F0000</color>
+    <color name="period_Expecting_Color">#FF69B4</color>
+    <color name="period_Pregnant_Color">#800080</color>
+    <color name="habit_Tag_Color">#EF6C00</color>
+    <color name="todo_Tag_Color">#FFF200</color>
+</resources>

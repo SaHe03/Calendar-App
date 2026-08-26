@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/calendarDayRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/calendarDayText"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:gravity="center_horizontal"
+        android:textColor="@color/black"
+        android:textSize="16sp"
+        tools:text="22"
+        />
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center_horizontal"
+            android:orientation="vertical"
+            android:paddingBottom="4dp">
+            <View
+                android:id="@+id/appointmentIndicator"
+                android:layout_width="24dp"
+                android:layout_height="10dp"
+                android:layout_gravity="center"
+                android:background="@color/appointment_Tag_Color"
+                android:visibility="gone"
+            />
+            <View
+                android:id="@+id/periodIndicator"
+                android:visibility="gone"
+                android:layout_width="24dp"
+                android:layout_height="10dp"
+                android:layout_gravity="center"
+                android:background="@color/period_Tag_Color"
+                />
+            <View
+                android:id="@+id/habitIndicator"
+                android:visibility="gone"
+                android:layout_width="24dp"
+                android:layout_height="10dp"
+                android:layout_gravity="center"
+                android:background="@color/habit_Tag_Color"
+                />
+            <View
+                android:id="@+id/todoIndicator"
+                android:visibility="gone"
+                android:layout_width="24dp"
+                android:layout_height="10dp"
+                android:layout_gravity="center"
+                android:background="@color/todo_Tag_Color"
+                />
+
+        </LinearLayout>
+
+</FrameLayout>

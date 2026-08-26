@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+<!-- A bottom nav bar to go between the specifc features pages,
+Each page should handle the addition of information
+ Todo list (A checklist or textview of mostly the to-dos,
+            and a calendar for the date, although add a time block)
+ Appointments ( to show past/upcoming appointments)
+ Periods (to show a person's period information)
+ Main Overview ( show in the textview, scollable all of a date's information)
+ Habits ( A checklist of the habits, to add a habit, to mark/edit a habit)
+ A fifth feature for centering maybe gym records
+        (The exercise, the measurement, the weight of the day)
+-->
+
+    <item
+        android:id="@+id/nav_overview"
+        android:title="Main"
+        />
+    <item
+        android:id="@+id/nav_appointments"
+        android:title="Appointments"
+        />
+    <item
+        android:id="@+id/nav_periods"
+        android:title="Periods"
+        />
+    <item
+        android:id="@+id/nav_habits"
+        android:title="Habits"
+        />
+    <item
+        android:id="@+id/nav_todo"
+        android:title="To-Dos"
+        />
+
+
+
+</menu>
+

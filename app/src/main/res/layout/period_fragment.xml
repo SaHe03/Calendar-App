@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This is a file to try and migrate the period view into
+it's own file to be called upon rather than within a hidden layout
+Must have a seleected date shown
+THe calendar with the period cycle days/expected days selected and colored
+The summary box to show the period progress by days to end/ days to next
+A button to add the current days period information
+Default all days to having no actual period
+There should only be 1 expecting week,
+    that is updated by the start/end date of the latest period cycle
+The add button should replace the summary box with it's own panel
+    The panel should have a x for close
+    drop down menu of the flow enums
+    A edittext to add notes for cramps
+
+    RESERVE COLORS OF RED HUES MOSTLY FOR PERIODS (INCLUDING A BROWNISH RED)
+-->
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:calendar="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainOverviewFragment"
+    >
+    <TextView
+        android:id="@+id/idTVDate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:gravity="center"
+        android:padding="8dp"
+        android:text="Current Date"
+        android:textAlignment="center"
+        android:textColor="@color/black"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="?attr/selectableItemBackground"
+        />
+
+    <!-- Add CalendarView to display the Calendar -->
+    <com.kizitonwose.calendar.view.CalendarView
+        android:id="@+id/calendarView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        calendar:cv_dayViewResource="@layout/calendar_day_layout"
+        android:layout_below="@id/idTVDate"
+        android:layout_marginTop="30dp"
+        calendar:cv_daySize="seventhWidth"
+        />
+
+    <LinearLayout
+        android:id="@+id/periodSummaryPanel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:layout_below="@id/calendarView"
+        >
+        <TextView
+            android:id="@+id/periodSummaryText"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_margin="16dp"
+            android:padding="12dp"
+            android:gravity="start"
+            android:textColor="@color/black"
+            android:textSize="16sp" />
+        <Button
+            android:id="@+id/addPeriodButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="32dp"
+            android:text="+"
+            />
+    </LinearLayout>
+    <LinearLayout
+        android:id="@+id/periodEditPanel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:layout_below="@id/calendarView"
+        android:visibility="gone"
+        >
+        <Button
+            android:id="@+id/closePeriodButton"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:layout_gravity="end"
+            android:text="X"
+            />
+        <TextView
+            android:id="@+id/flowPrompter"
+            android:layout_width="200dp"
+            android:layout_height="40dp"
+            android:layout_gravity="start"
+            android:hint="How's the Flow"
+            />
+        <Spinner
+            android:id="@+id/flowSpinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="40dp"
+        />
+
+        <EditText
+            android:id="@+id/periodNotesInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:hint="Notes on cramps or behavior"
+            android:inputType="text"
+            />
+
+        <Button
+            android:id="@+id/addPeriodLogButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:text="Add period data"
+            />
+
+    </LinearLayout>
+</RelativeLayout>
