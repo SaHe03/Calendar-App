@@ -19,8 +19,6 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Spinner
-import com.google.android.material.timepicker.TimeFormat
-import java.sql.Time
 
 class PeriodFragment : Fragment(R.layout.period_fragment) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -30,7 +28,7 @@ class PeriodFragment : Fragment(R.layout.period_fragment) {
         val calendarView = view.findViewById<CalendarView>(R.id.calendarView)
         val periodPanelSummary = view.findViewById<LinearLayout>(R.id.periodSummaryPanel)
         val periodSummaryText = view.findViewById<TextView>(R.id.periodSummaryText)
-        val periodPanelEdit= view.findViewById<LinearLayout>(R.id.periodEditPanel)
+        val periodAddNewPanel= view.findViewById<LinearLayout>(R.id.periodAddNewPanel)
         val addperiodButton = view.findViewById<Button>(R.id.addPeriodButton)
         val closeperiodButton = view.findViewById<Button>(R.id.closePeriodButton)
         val periodConfirmButton = view.findViewById<Button>(R.id.addPeriodLogButton)
@@ -53,10 +51,10 @@ class PeriodFragment : Fragment(R.layout.period_fragment) {
         // get the start up inital date
         addperiodButton.setOnClickListener {
             periodPanelSummary.visibility = View.GONE
-            periodPanelEdit.visibility = View.VISIBLE
+            periodAddNewPanel.visibility = View.VISIBLE
         }
         closeperiodButton.setOnClickListener {
-            periodPanelEdit.visibility = View.GONE
+            periodAddNewPanel.visibility = View.GONE
             periodPanelSummary.visibility = View.VISIBLE
         }
 
@@ -84,7 +82,7 @@ class PeriodFragment : Fragment(R.layout.period_fragment) {
             periodSummaryText.text = buildPeriodSummary(dateKey)
             calendarView.notifyDateChanged(LocalDate.parse(dateKey))
             periodNotesInput.text.clear()
-            periodPanelEdit.visibility = View.GONE
+            periodAddNewPanel.visibility = View.GONE
             periodPanelSummary.visibility = View.VISIBLE
         }
 

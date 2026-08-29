@@ -79,7 +79,7 @@ The add button should replace the summary box with it's own panel
             />
     </LinearLayout>
     <LinearLayout
-        android:id="@+id/periodEditPanel"
+        android:id="@+id/periodAddNewPanel"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"

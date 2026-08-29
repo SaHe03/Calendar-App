@@ -17,6 +17,7 @@ import android.app.DatePickerDialog
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.timepicker.TimeFormat
 import java.sql.Time
@@ -30,12 +31,13 @@ class HabitFragment : Fragment(R.layout.habit_fragment) {
         val calendarView = view.findViewById<CalendarView>(R.id.calendarView)
         val habitSummaryPanel = view.findViewById<LinearLayout>(R.id.habitSummaryPanel)
         val habitSummary = view.findViewById<RecyclerView>(R.id.habitSummaryText)
-        val habitEditPanel= view.findViewById<LinearLayout>(R.id.habitEditPanel)
+        val habitAddNewPanel= view.findViewById<LinearLayout>(R.id.habitAddNewPanel)
         val addNewHabitButton = view.findViewById<Button>(R.id.addNewHabitButton)
         val closeHabitButton = view.findViewById<Button>(R.id.closeHabitButton)
         val confirmHabitButton = view.findViewById<Button>(R.id.confirmHabitButton)
         val habitTitleInput = view.findViewById<EditText>(R.id.habitTitleInput)
         val habitFrequencyInput = view.findViewById<EditText>(R.id.habitFrequencyInput)
+        habitSummary.layoutManager = LinearLayoutManager(requireContext())
 
         addNewHabitButton.setOnClickListener {
             habitSummaryPanel.visibility = View.GONE
@@ -57,8 +59,8 @@ class HabitFragment : Fragment(R.layout.habit_fragment) {
             if(freqInput < 1){
                 freqInput = 1
             }
-            habitAdapter.submitList(buildHabitSummary(dateKey))
-            habitSummary.submitList(buildHabitSummary(dateKey))
+            habitSummary.adapter = CalendarItemAdapter(List("Placeholder item"))
+            habitSummary.adapter = CalendarItemAdapter(habitsForDate(dateKey))
             calendarView.notifyDateChanged(LocalDate.parse(dateKey))
             habitSet.add(HabitCheck(dateKey, titleInput, freqInput.toInt(), HabitStatus.habitIncomplete))
             habitTitleInput.text.clear()
@@ -75,8 +77,9 @@ class HabitFragment : Fragment(R.layout.habit_fragment) {
             dateText.text = date.format(
                 DateTimeFormatter.ofPattern("MM/dd/yyyy")
             )
-            habitSummaryText.text = buildHabitSummary(dateKey)
-        }
+            habitSummary.adapter = CalendarItemAdapter(
+                arrayOf("Placeholder item")
+            )        }
         dateText.setOnClickListener {
             val today = LocalDate.now()
             DatePickerDialog(requireContext(), { _, year, month, dayOfMonth ->
@@ -104,7 +107,7 @@ class HabitFragment : Fragment(R.layout.habit_fragment) {
                     val habitIndicator = container.view.findViewById<View>(R.id.habitIndicator)
 
                     habitIndicator.visibility =
-                        if (habits.any { it.dateKey == dateKey }) {
+                        if (habitSet.any { it.dateKey == dateKey }) {
                             View.VISIBLE
                         } else {
                             View.GONE
@@ -153,7 +156,7 @@ class HabitFragment : Fragment(R.layout.habit_fragment) {
 
         calendarView.scrollToMonth(currentMonth)
     }
-    private fun buildHabitSummary(dateKey: String): List<HabitCheck> {
+    private fun habitsForDate(dateKey: String): List<HabitCheck> {
         val dailyHabit = habitSet.filter { it.dateKey == dateKey }
         return dailyHabit
     }

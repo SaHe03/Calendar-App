@@ -30,7 +30,7 @@ class AppointmentFragment : Fragment(R.layout.appointment_fragment) {
         val calendarView = view.findViewById<CalendarView>(R.id.calendarView)
         val apptPanelSummary = view.findViewById<LinearLayout>(R.id.apptSummaryPanel)
         val apptSummaryText = view.findViewById<TextView>(R.id.apptSummaryText)
-        val apptPanelEdit= view.findViewById<LinearLayout>(R.id.appointmentEditPanel)
+        val apptPanelAddNew= view.findViewById<LinearLayout>(R.id.appointmentAddNewPanel)
         val addApptButton = view.findViewById<Button>(R.id.addApptButton)
         val closeApptButton = view.findViewById<Button>(R.id.closeApptButton)
         val addApptConfirmButton = view.findViewById<Button>(R.id.addApptConfirmButton)
@@ -42,10 +42,10 @@ class AppointmentFragment : Fragment(R.layout.appointment_fragment) {
         // get the start up inital date
         addApptButton.setOnClickListener {
             apptPanelSummary.visibility = View.GONE
-            apptPanelEdit.visibility = View.VISIBLE
+            apptPanelAddNew.visibility = View.VISIBLE
         }
         closeApptButton.setOnClickListener {
-            apptPanelEdit.visibility = View.GONE
+            apptPanelAddNew.visibility = View.GONE
             apptPanelSummary.visibility = View.VISIBLE
         }
         addApptConfirmButton.setOnClickListener {
@@ -69,7 +69,7 @@ class AppointmentFragment : Fragment(R.layout.appointment_fragment) {
             appointmentTitleInput.text.clear()
             appointmentNotesInput.text.clear()
             appointmentTimeInput.text.clear()
-            apptPanelEdit.visibility = View.GONE
+            apptPanelAddNew.visibility = View.GONE
             apptPanelSummary.visibility = View.VISIBLE
         }
         

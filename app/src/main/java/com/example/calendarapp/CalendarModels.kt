@@ -9,7 +9,7 @@ import java.time.LocalDate
         var notes: String,
         var time: String,
         var meridiem: String
-    )
+    ) : CalendarItem
     //val appointments: MutableList<Appointment> = mutableListOf()
 val appointments: MutableList<Appointment> = mutableListOf(
     Appointment( "2026-08-17",  "Doctor",  "Teeth",  "1:22", "AM")
@@ -21,7 +21,7 @@ val appointments: MutableList<Appointment> = mutableListOf(
         var habitName: String,
         var frequency: Int,
         var currentStatus: HabitStatus,
-    )
+    ) : CalendarItem
     // To hold the information of a single period day
     val habitSet: MutableList<HabitCheck> = mutableListOf(
         HabitCheck("2026-08-17","Shower", 2,HabitStatus.habitIncomplete)
@@ -32,7 +32,7 @@ val appointments: MutableList<Appointment> = mutableListOf(
         var dateKey: String,
         var flow: PeriodFlowStatus,
         var notes: String
-    )
+    ) : CalendarItem
     // To deal with the multiday event of a period and related functions to calculate a period
     val periods: MutableList<PeriodLog> = mutableListOf(
         PeriodLog("2026-08-17", PeriodFlowStatus.NORMAL,"No notes")
@@ -46,7 +46,7 @@ val appointments: MutableList<Appointment> = mutableListOf(
         var title: String,
         var notes: String,
         var isComplete: Boolean = false
-    )
+    ) : CalendarItem
     val todoList: MutableList<Todo> = mutableListOf(
         Todo("2026-08-17",  "Eat",  "food",  false)
     )

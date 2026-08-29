@@ -17,8 +17,6 @@ import android.app.DatePickerDialog
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
-import com.google.android.material.timepicker.TimeFormat
-import java.sql.Time
 
 class ToDoFragment : Fragment(R.layout.todo_fragment) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -29,7 +27,7 @@ class ToDoFragment : Fragment(R.layout.todo_fragment) {
         val calendarView = view.findViewById<CalendarView>(R.id.calendarView)
         val todoPanelSummary = view.findViewById<LinearLayout>(R.id.ToDoSummaryPanel)
         val todoSummaryText = view.findViewById<TextView>(R.id.ToDoSummaryText)
-        val todoPanelEdit= view.findViewById<LinearLayout>(R.id.toDoEditPanel)
+        val todoPanelAddNew= view.findViewById<LinearLayout>(R.id.toDoAddNewPanel)
         val addToDoButton = view.findViewById<Button>(R.id.addNewToDoButton)
         val closeToDoButton = view.findViewById<Button>(R.id.closeToDoButton)
         val addToDoConfirmButton = view.findViewById<Button>(R.id.addToDoConfirmButton)
@@ -39,10 +37,10 @@ class ToDoFragment : Fragment(R.layout.todo_fragment) {
         // get the start up inital date
         addToDoButton.setOnClickListener {
             todoPanelSummary.visibility = View.GONE
-            todoPanelEdit.visibility = View.VISIBLE
+            todoPanelAddNew.visibility = View.VISIBLE
         }
         closeToDoButton.setOnClickListener {
-            todoPanelEdit.visibility = View.GONE
+            todoPanelAddNew.visibility = View.GONE
             todoPanelSummary.visibility = View.VISIBLE
         }
         addToDoConfirmButton.setOnClickListener {
@@ -59,7 +57,7 @@ class ToDoFragment : Fragment(R.layout.todo_fragment) {
             todoList.add(Todo(dateKey, titleInput, noteInput, false))
             todoTitleInput.text.clear()
             todoNotesInput.text.clear()
-            todoPanelEdit.visibility = View.GONE
+            todoPanelAddNew.visibility = View.GONE
             todoPanelSummary.visibility = View.VISIBLE
         }
 

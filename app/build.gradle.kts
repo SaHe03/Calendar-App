@@ -40,12 +40,11 @@ android {
 
 dependencies {
     implementation(libs.androidx.activity)
+    implementation(libs.androidx.constraintlayout)
     implementation(libs.material)
     implementation(libs.kizitonwose.calendar.view)
 
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.3")
-    implementation(libs.androidx.activity)
-    implementation(libs.material)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.espresso.core)
