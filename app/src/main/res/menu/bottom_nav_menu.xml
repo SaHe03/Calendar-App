@@ -14,24 +14,24 @@ Each page should handle the addition of information
 -->
 
     <item
-        android:id="@+id/nav_overview"
-        android:title="Main"
-        />
-    <item
         android:id="@+id/nav_appointments"
-        android:title="Appointments"
+        android:title="@string/nav_appointments"
         />
     <item
         android:id="@+id/nav_periods"
-        android:title="Periods"
+        android:title="@string/nav_periods"
+        />
+    <item
+        android:id="@+id/nav_overview"
+        android:title="@string/nav_overview"
         />
     <item
         android:id="@+id/nav_habits"
-        android:title="Habits"
+        android:title="@string/nav_habits"
         />
     <item
         android:id="@+id/nav_todo"
-        android:title="To-Dos"
+        android:title="@string/nav_todos"
         />
 
 

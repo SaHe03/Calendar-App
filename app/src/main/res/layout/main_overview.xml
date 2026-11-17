@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainOverviewFragment"
+        tools:context=".MainOverviewFragment"
     >
 
     <!--text view for displaying the selected date
@@ -16,10 +16,10 @@
         android:id="@+id/idTVDate"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="8dp"
+        android:layout_margin="10dp"
         android:gravity="center"
         android:padding="8dp"
-        android:text="Current Date"
+        android:text="@string/calendar_date"
         android:textAlignment="center"
         android:textColor="@color/black"
         android:textSize="20sp"
@@ -38,22 +38,24 @@
         android:layout_below="@id/idTVDate"
         android:layout_marginTop="30dp"
         calendar:cv_daySize="seventhWidth"
+        android:layout_margin="5dp"
         />
     <LinearLayout
         android:id="@+id/summaryPanel"
         android:layout_width="match_parent"
         android:layout_height="250dp"
         android:layout_below="@id/calendarView"
-        android:orientation="vertical">
-        <TextView
-            android:id="@+id/dailySummaryText"
+        android:orientation="vertical"
+        android:layout_margin="5dp"
+        >
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/dailySummaryList"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_margin="16dp"
+            android:clipToPadding="false"
             android:padding="12dp"
-            android:gravity="start"
-            android:textColor="@color/black"
-            android:textSize="16sp" />
+            />
     </LinearLayout>
 
 </RelativeLayout>

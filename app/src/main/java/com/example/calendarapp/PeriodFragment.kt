@@ -1,192 +1,196 @@
 package com.example.calendarapp
 
+import android.app.DatePickerDialog
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
-import android.widget.TextView
+import android.view.ViewGroup
+import android.widget.ArrayAdapter
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import com.kizitonwose.calendar.view.CalendarView
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.calendarapp.databinding.PeriodFragmentBinding
 import com.kizitonwose.calendar.core.CalendarDay
+import com.kizitonwose.calendar.core.DayPosition
 import com.kizitonwose.calendar.core.firstDayOfWeekFromLocale
 import com.kizitonwose.calendar.view.MonthDayBinder
-import com.kizitonwose.calendar.view.ViewContainer
-import com.kizitonwose.calendar.core.DayPosition
-import java.time.YearMonth
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.format.DateTimeFormatter
-import android.app.DatePickerDialog
-import android.widget.ArrayAdapter
-import android.widget.Button
-import android.widget.EditText
-import android.widget.LinearLayout
-import android.widget.Spinner
+import kotlinx.coroutines.launch
 
-class PeriodFragment : Fragment(R.layout.period_fragment) {
+class PeriodFragment : Fragment() {
+    private var _binding: PeriodFragmentBinding? = null
+    private val binding get() = _binding!!
+    private val viewModel: CalendarViewModel by activityViewModels()
+    private lateinit var itemAdapter: CalendarItemAdapter
+    private var state = CalendarUiState()
+    private var editingPeriod: PeriodLog? = null
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?,
+    ): View {
+        _binding = PeriodFragmentBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        // Obtain references to views declared in that XML file
-        val dateText = view.findViewById<TextView>(R.id.idTVDate)
-        val calendarView = view.findViewById<CalendarView>(R.id.calendarView)
-        val periodPanelSummary = view.findViewById<LinearLayout>(R.id.periodSummaryPanel)
-        val periodSummaryText = view.findViewById<TextView>(R.id.periodSummaryText)
-        val periodAddNewPanel= view.findViewById<LinearLayout>(R.id.periodAddNewPanel)
-        val addperiodButton = view.findViewById<Button>(R.id.addPeriodButton)
-        val closeperiodButton = view.findViewById<Button>(R.id.closePeriodButton)
-        val periodConfirmButton = view.findViewById<Button>(R.id.addPeriodLogButton)
-        val periodFlowInput = view.findViewById<Spinner>(R.id.flowSpinner)
-        val periodNotesInput = view.findViewById<EditText>(R.id.periodNotesInput)
-        val flowPrompter = view.findViewById<TextView>(R.id.flowPrompter)
+        setupEventList()
+        setupFlowSpinner()
+        setupEditor()
+        setupCalendar()
+        binding.idTVDate.setOnClickListener { showDatePicker() }
 
-        val flowLabels = spinnerPeriodFlows.map { status ->
-            getString(status.labelRes())
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.uiState.collect(::render)
+            }
         }
-        val adapter = ArrayAdapter(
+    }
+
+    private fun setupEventList() {
+        itemAdapter = CalendarItemAdapter(
+            onDeleteRequested = viewModel::delete,
+            onEditRequested = viewModel::requestEdit,
+            onCompletionChanged = viewModel::toggleComplete,
+        )
+        binding.periodSummaryList.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = itemAdapter
+        }
+    }
+
+    private fun setupFlowSpinner() {
+        val labels = spinnerPeriodFlows.map { getString(it.labelRes()) }
+        binding.flowSpinner.adapter = ArrayAdapter(
             requireContext(),
             android.R.layout.simple_spinner_item,
-            flowLabels
-        )
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        periodFlowInput.adapter = adapter
-
-        var selectedDateKey: String? = null
-        // get the start up inital date
-        addperiodButton.setOnClickListener {
-            periodPanelSummary.visibility = View.GONE
-            periodAddNewPanel.visibility = View.VISIBLE
+            labels,
+        ).apply {
+            setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         }
-        closeperiodButton.setOnClickListener {
-            periodAddNewPanel.visibility = View.GONE
-            periodPanelSummary.visibility = View.VISIBLE
-        }
+    }
 
-        periodConfirmButton.setOnClickListener {
-            val dateKey = selectedDateKey ?: return@setOnClickListener
-            var noteInput = periodNotesInput.text.toString().trim()
-            val selectedPosition = periodFlowInput.selectedItemPosition
+    private fun setupEditor() = with(binding) {
+        addPeriodButton.setOnClickListener {
+            val existing = state.itemsForSelectedDate().filterIsInstance<PeriodLog>().firstOrNull()
+            openEditor(existing)
+        }
+        closePeriodButton.setOnClickListener { closeEditor() }
+        addPeriodLogButton.setOnClickListener {
+            val selectedPosition = flowSpinner.selectedItemPosition
             if (selectedPosition !in spinnerPeriodFlows.indices) {
                 flowPrompter.error = "Pick a flow"
                 return@setOnClickListener
             }
-            val flowInput: PeriodFlowStatus = spinnerPeriodFlows[selectedPosition]
-            val existingPeriod = periods.find {
-                it.dateKey == dateKey
-            }
-            if(noteInput == ""){
-                noteInput = "No notes"
-            }
-            if (existingPeriod != null) {
-                existingPeriod.flow = flowInput
-                existingPeriod.notes = noteInput
-            } else {
-                periods.add(PeriodLog(dateKey, flowInput, noteInput))
-            }
-            periodSummaryText.text = buildPeriodSummary(dateKey)
-            calendarView.notifyDateChanged(LocalDate.parse(dateKey))
-            periodNotesInput.text.clear()
-            periodAddNewPanel.visibility = View.GONE
-            periodPanelSummary.visibility = View.VISIBLE
+            val previous = editingPeriod
+            val period = PeriodLog(
+                dateKey = previous?.dateKey ?: state.selectedDateKey,
+                flow = spinnerPeriodFlows[selectedPosition],
+                notes = periodNotesInput.text.toString().trim().ifBlank { "No notes" },
+                id = previous?.id ?: 0,
+            )
+            if (previous == null) viewModel.add(period) else viewModel.update(period)
+            closeEditor()
         }
+    }
 
-        fun showDate(date: LocalDate) {
-            val dateKey = date.toString()
-            selectedDateKey = dateKey
-            dateText.text = date.format(DateTimeFormatter.ofPattern("MM/dd/yyyy"))
-            periodSummaryText.text = buildPeriodSummary(dateKey)
-        }
-        dateText.setOnClickListener {
-            val today = LocalDate.now()
-            DatePickerDialog(requireContext(), { _, year, month, dayOfMonth ->
-                val pickedDate = LocalDate.of( year, month + 1, dayOfMonth)
-                showDate(pickedDate)
-                calendarView.smoothScrollToDate(pickedDate) },
-                today.year, today.monthValue - 1, today.dayOfMonth).show()
-        }
-        showDate(LocalDate.now())
-        calendarView.dayBinder =
-            object : MonthDayBinder<ViewContainer> {
-                override fun create(view: View) = ViewContainer(view)
-                override fun bind(container: ViewContainer, day: CalendarDay){
-                    val dateKey = day.date.toString()
-                    container.view.findViewById<TextView>(R.id.calendarDayText).text = day.date.dayOfMonth.toString()
-                    val dayText = container.view.findViewById<TextView>( R.id.calendarDayText )
-                    dayText.text = day.date.dayOfMonth.toString()
+    private fun openEditor(period: PeriodLog?) = with(binding) {
+        editingPeriod = period
+        periodNotesInput.setText(period?.notes.orEmpty())
+        val flowIndex = spinnerPeriodFlows.indexOf(period?.flow)
+        if (flowIndex >= 0) flowSpinner.setSelection(flowIndex)
+        addPeriodLogButton.setText(
+            if (period == null) R.string.add_period_text else R.string.save_changes,
+        )
+        periodSummaryPanel.isVisible = false
+        periodAddNewPanel.isVisible = true
+    }
 
-                    if (day.date.toString() == selectedDateKey) { dayText.setBackgroundResource(
-                        R.drawable.date_selector )
-                    }
-                    else {
-                        dayText.setBackgroundResource(0)
-                    }
-                    val periodIndicator = container.view.findViewById<View>(R.id.periodIndicator)
-                    val periodLogSpecificDate = periods.find(){
-                            periodLog -> periodLog.dateKey == dateKey
-                    }
-                    if (periodLogSpecificDate != null){
-                        container.view.setBackgroundResource(periodLogSpecificDate.flow.backgroundRes())
-                        periodIndicator.visibility = View.VISIBLE
-                    } else {
-                        periodIndicator.visibility = View.GONE
-                    }
-                    /*
-                    val displayedStatus = when {
-                        periodLogSpecificDate != null -> {periodLogSpecificDate.flow }
-                        day.date in expectedPeriodDates -> { PeriodFlowStatus.EXPECTING }
-                        else -> {null}
-                    }
-                     */
-                    container.view.setOnClickListener {
-                        val previousDateKey = selectedDateKey
-                        showDate(day.date)
-                        previousDateKey?.let {
-                            calendarView.notifyDateChanged(
-                                LocalDate.parse(it) )
-                        }
-                        calendarView.notifyDateChanged(day.date)
+    private fun closeEditor() {
+        editingPeriod = null
+        viewModel.clearEditRequest()
+        binding.periodAddNewPanel.isVisible = false
+        binding.periodSummaryPanel.isVisible = true
+    }
 
-                        if (day.position != DayPosition.MonthDate) {
-                            calendarView.smoothScrollToMonth( YearMonth.from(day.date) )
-                        }
-                    }
-                    // THis is handling clicks on day
-                    container.view.setOnClickListener {
-                        val previousDateKey = selectedDateKey
-                        showDate(day.date)
-                        previousDateKey?.let {
-                            calendarView.notifyDateChanged(
-                                LocalDate.parse(it)
-                            )
-                        }
-                        calendarView.notifyDateChanged(day.date)
+    private fun setupCalendar() = with(binding.calendarView) {
+        dayBinder = object : MonthDayBinder<CalendarDayViewContainer> {
+            override fun create(view: View) = CalendarDayViewContainer(view)
 
-                        if (day.position != DayPosition.MonthDate) {
-                            calendarView.smoothScrollToMonth(
-                                YearMonth.from(day.date)
-                            )
-                        }
+            override fun bind(container: CalendarDayViewContainer, day: CalendarDay) {
+                val dayBinding = container.binding
+                val period = state.items.filterIsInstance<PeriodLog>()
+                    .firstOrNull { it.dateKey == day.date.toString() }
+                dayBinding.calendarDayRoot.setBackgroundResource(period?.flow?.backgroundRes() ?: 0)
+                dayBinding.calendarDayText.apply {
+                    text = day.date.dayOfMonth.toString()
+                    setBackgroundResource(
+                        if (day.date == state.selectedDate) R.drawable.date_selector else 0,
+                    )
+                }
+                dayBinding.appointmentIndicator.isVisible = false
+                dayBinding.periodIndicator.isVisible = period != null
+                dayBinding.habitIndicator.isVisible = false
+                dayBinding.todoIndicator.isVisible = false
+                dayBinding.calendarDayRoot.setOnClickListener {
+                    viewModel.selectDate(day.date)
+                    if (day.position != DayPosition.MonthDate) {
+                        smoothScrollToMonth(YearMonth.from(day.date))
                     }
                 }
             }
+        }
         val currentMonth = YearMonth.now()
-        calendarView.setup(
+        setup(
             currentMonth.minusMonths(12),
             currentMonth.plusMonths(12),
-            firstDayOfWeekFromLocale()
+            firstDayOfWeekFromLocale(),
         )
-
-        calendarView.scrollToMonth(currentMonth)
+        scrollToMonth(currentMonth)
     }
-    private fun buildPeriodSummary(dateKey: String): String {
-        val dailyPeriods = periods.filter { it.dateKey == dateKey }
-        if (dailyPeriods.isEmpty()) {
-            return "No information for this date"
-        }
-        return "Periods\n" + dailyPeriods.joinToString("\n") {
-            periodLog -> val flowLabel = getString(periodLog.flow.labelRes())
-                    "\t$flowLabel: ${periodLog.notes}"
+
+    private fun render(newState: CalendarUiState) {
+        state = newState
+        binding.idTVDate.text = newState.selectedDate.format(DATE_FORMAT)
+        itemAdapter.submitList(newState.itemsForSelectedDate().filterIsInstance<PeriodLog>())
+        binding.calendarView.notifyCalendarChanged()
+
+        val requestedEdit = newState.editingItem as? PeriodLog
+        if (requestedEdit != null && editingPeriod?.id != requestedEdit.id) {
+            openEditor(requestedEdit)
         }
     }
-    //val expectedPeriodDates = calculateExpectedPeriodDates(periods)
-    //private fun calculateExpectedPeriodDates(periodLogs: List<PeriodLog>): Set<LocalDate>{}
 
+    private fun showDatePicker() {
+        val selectedDate = state.selectedDate
+        DatePickerDialog(
+            requireContext(),
+            { _, year, month, dayOfMonth ->
+                val date = LocalDate.of(year, month + 1, dayOfMonth)
+                viewModel.selectDate(date)
+                binding.calendarView.smoothScrollToDate(date)
+            },
+            selectedDate.year,
+            selectedDate.monthValue - 1,
+            selectedDate.dayOfMonth,
+        ).show()
+    }
+
+    override fun onDestroyView() {
+        binding.periodSummaryList.adapter = null
+        _binding = null
+        super.onDestroyView()
+    }
+
+    private companion object {
+        val DATE_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
+    }
 }
-
-

@@ -1,89 +1,104 @@
 package com.example.calendarapp
 
-import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.TextView
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import androidx.transition.Visibility
+import com.example.calendarapp.databinding.CalendarItemBinding
 
-class CalendarItemAdapter(private val dataSet: List<CalendarItem>,
-                          private val onDeleteRequested: (CalendarItem) -> Unit,
-                          private val onEditRequested: (CalendarItem) -> Unit):
-    RecyclerView.Adapter<CalendarItemAdapter.ViewHolder>(){
+class CalendarItemAdapter(
+    private val onDeleteRequested: (CalendarItem) -> Unit,
+    private val onEditRequested: (CalendarItem) -> Unit,
+    private val onCompletionChanged: (CalendarItem, Boolean) -> Unit,
+) : ListAdapter<CalendarItem, CalendarItemAdapter.ViewHolder>(ItemDiff) {
 
-        class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+    private var expandedItemId: Long? = null
 
-            // Define click listener for the ViewHolder's View
-            val itemTextName: TextView = view.findViewById(R.id.itemTextName)
-            val itemTextNotes: TextView = view.findViewById(R.id.itemTextNotes)
-            val itemCheckBox: TextView = view.findViewById(R.id.itemCheckBox)
-            val itemEditButton: TextView = view.findViewById(R.id.itemEditButton)
-            val itemDeleteButton: TextView = view.findViewById(R.id.itemDeleteButton)
-        }
-        // Create new views (invoked by the layout manager)
-        override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): ViewHolder {
-            // Create a new view, which defines the UI of the list item
-            val view = LayoutInflater.from(viewGroup.context)
-                .inflate(R.layout.calendar_item, viewGroup, false)
-            return ViewHolder(view)
-        }
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val binding = CalendarItemBinding.inflate(
+            LayoutInflater.from(parent.context),
+            parent,
+            false,
+        )
+        return ViewHolder(binding)
+    }
 
-        // Replace the contents of a view (invoked by the layout manager)
-        override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
-            val event = dataSet[position]
-            // Get element from your dataset at this position and replace the
-            // contents of the view with that element
-            when (event) {
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        holder.bind(getItem(position))
+    }
+
+    inner class ViewHolder(
+        private val binding: CalendarItemBinding,
+    ) : RecyclerView.ViewHolder(binding.root) {
+
+        fun bind(item: CalendarItem) = with(binding) {
+            itemCheckBox.setOnCheckedChangeListener(null)
+            itemCheckBox.visibility = View.GONE
+            itemCheckBox.isChecked = false
+
+            when (item) {
                 is Appointment -> {
-                    viewHolder.itemTextName.text = event.title
-                    viewHolder.itemTextNotes.text = event.notes
+                    itemTextName.text = "${item.title} · ${item.time} ${item.meridiem}"
+                    itemTextNotes.text = item.notes
                 }
                 is PeriodLog -> {
-                    viewHolder.itemTextName.text = event.flow.toString()
-                    viewHolder.itemTextNotes.text = event.notes
+                    itemTextName.text = item.flow.name.lowercase().replaceFirstChar { it.uppercase() }
+                    itemTextNotes.text = item.notes
                 }
                 is HabitCheck -> {
-                    viewHolder.itemTextName.text = event.habitName
-                    viewHolder.itemCheckBox.visibility = View.VISIBLE
-                    if (event.frequency > 1){
-                        viewHolder.itemTextNotes.text = "Every " + event.frequency + " days"
+                    itemTextName.text = item.habitName
+                    itemTextNotes.text = if (item.frequency == 1) {
+                        "Every day"
                     } else {
-                        viewHolder.itemTextNotes.text = "Every single days"
+                        "Every ${item.frequency} days"
                     }
-                    viewHolder.itemCheckBox.isActivated = event.currentStatus == HabitStatus.habitComplete
+                    itemCheckBox.visibility = View.VISIBLE
+                    itemCheckBox.isChecked = item.currentStatus == HabitStatus.COMPLETE
                 }
                 is Todo -> {
-                    viewHolder.itemTextName.text = event.title
-                    viewHolder.itemTextNotes.text = event.notes
-                    viewHolder.itemCheckBox.visibility = View.VISIBLE
-                    viewHolder.itemCheckBox.isActivated = event.isComplete == true
-                }
-            }
-            viewHolder.itemTextName.setOnClickListener {
-                viewHolder.itemEditButton.visibility = View.VISIBLE
-                viewHolder.itemDeleteButton.visibility = View.VISIBLE
-
-            }
-            viewHolder.itemEditButton.setOnClickListener {
-                viewHolder.itemEditButton.visibility = View.GONE
-                viewHolder.itemDeleteButton.visibility = View.GONE
-                viewHolder.itemEditButton.setOnClickListener {
-                    onEditRequested(event)
-                }
-            }
-            viewHolder.itemDeleteButton.setOnClickListener {
-                viewHolder.itemEditButton.visibility = View.GONE
-                viewHolder.itemDeleteButton.visibility = View.GONE
-                viewHolder.itemDeleteButton.setOnClickListener {
-                    onDeleteRequested(event)
+                    itemTextName.text = item.title
+                    itemTextNotes.text = item.notes
+                    itemCheckBox.visibility = View.VISIBLE
+                    itemCheckBox.isChecked = item.isComplete
                 }
             }
 
+            val expanded = item.id == expandedItemId
+            itemEditButton.visibility = if (expanded) View.VISIBLE else View.GONE
+            itemDeleteButton.visibility = if (expanded) View.VISIBLE else View.GONE
 
+            root.setOnClickListener {
+                val previousExpandedId = expandedItemId
+                expandedItemId = if (expandedItemId == item.id) null else item.id
+                previousExpandedId?.let { notifyItemChangedById(it) }
+                notifyItemChangedById(item.id)
+            }
+            itemEditButton.setOnClickListener {
+                expandedItemId = null
+                onEditRequested(item)
+            }
+            itemDeleteButton.setOnClickListener {
+                expandedItemId = null
+                onDeleteRequested(item)
+            }
+            itemCheckBox.setOnCheckedChangeListener { _, isChecked ->
+                onCompletionChanged(item, isChecked)
+            }
         }
-        // Return the size of your dataset (invoked by the layout manager)
-        override fun getItemCount() = dataSet.size
+    }
+
+    private fun notifyItemChangedById(id: Long) {
+        val index = currentList.indexOfFirst { it.id == id }
+        if (index >= 0) notifyItemChanged(index)
+    }
+
+    private object ItemDiff : DiffUtil.ItemCallback<CalendarItem>() {
+        override fun areItemsTheSame(oldItem: CalendarItem, newItem: CalendarItem): Boolean =
+            oldItem.id == newItem.id
+
+        override fun areContentsTheSame(oldItem: CalendarItem, newItem: CalendarItem): Boolean =
+            oldItem == newItem
+    }
 }

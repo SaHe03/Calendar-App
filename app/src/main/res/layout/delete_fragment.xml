@@ -14,15 +14,14 @@
             android:id="@+id/closeDeletionButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="right"
-            android:text="X"/>
+            android:layout_gravity="end"
+            android:text="@string/action_close"/>
         <TextView
             android:id="@+id/deletePrompt"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="16dp"
-            android:text="Are you sure to delete this Event?"
-            android:inputType="text" />
+            android:text="@string/delete_confirm_prompter" />
 
         <Button
             android:id="@+id/deleteEventConfirmButton"
@@ -31,7 +30,7 @@
             android:layout_gravity="end"
             android:layout_marginEnd="16dp"
             android:layout_marginBottom="32dp"
-            android:text="Delete event" />
+            android:text="@string/delete_confirm" />
     </LinearLayout>
 </RelativeLayout>
 

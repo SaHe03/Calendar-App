@@ -1,29 +1,45 @@
 package com.example.calendarapp
 
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
-import android.widget.Button
-import android.widget.LinearLayout
+import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-// THE ADAPTER DOESN'T HANDLE THE MOVING THIS WITH THE BUTTONS IN HERE, throw it at fragments that know what's being deleted
-class DeleteFragment : Fragment(R.layout.delete_fragment) {
+import com.example.calendarapp.databinding.DeleteFragmentBinding
+
+/**
+ * Kept as a legacy draft. Row deletion is now handled directly through the
+ * adapter callback and CalendarViewModel.
+ */
+class DeleteFragment : Fragment() {
+    private var _binding: DeleteFragmentBinding? = null
+    private val binding get() = _binding!!
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?,
+    ): View {
+        _binding = DeleteFragmentBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val exitDeleteButton = view.findViewById<Button>(R.id.closeDeletionButton)
-        val confirmDeleteButton = view.findViewById<Button>(    R.id.deleteEventConfirmButton)
-        exitDeleteButton.setOnClickListener{
+        binding.closeDeletionButton.setOnClickListener {
             parentFragmentManager.popBackStack()
         }
-        confirmDeleteButton.setOnClickListener {
-            val result = Bundle().apply {
-                putBoolean("confirmed", true)
-            }
+        binding.deleteEventConfirmButton.setOnClickListener {
             parentFragmentManager.setFragmentResult(
                 "delete_confirmation",
-                result
+                Bundle().apply { putBoolean("confirmed", true) },
             )
             parentFragmentManager.popBackStack()
         }
     }
 
+    override fun onDestroyView() {
+        _binding = null
+        super.onDestroyView()
+    }
 }

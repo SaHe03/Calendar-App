@@ -7,7 +7,9 @@
     android:minHeight="48dp"
     android:maxHeight="120dp"
     android:padding="12dp"
-    android:focusable="true">
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground">
 
     <CheckBox
         android:id="@+id/itemCheckBox"
@@ -18,6 +20,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         android:clickable="true"
+        android:focusable="true"
         />
 
     <TextView
@@ -25,12 +28,11 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
-        android:text="Item Title"
+        android:text="@string/calendar_item_preview"
         app:layout_constraintStart_toEndOf="@id/itemCheckBox"
         app:layout_constraintEnd_toStartOf="@id/itemEditButton"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_goneMarginStart="0dp"
-        android:clickable="true"
         />
 
     <TextView
@@ -48,7 +50,7 @@
         android:layout_width="wrap_content"
         android:layout_height="48dp"
         android:visibility="gone"
-        android:text="Edit"
+        android:text="@string/action_edit"
         app:layout_constraintEnd_toStartOf="@id/itemDeleteButton"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -60,7 +62,7 @@
         android:layout_width="wrap_content"
         android:layout_height="48dp"
         android:visibility="gone"
-        android:text="Delete"
+        android:text="@string/action_delete"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

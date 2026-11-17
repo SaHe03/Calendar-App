@@ -1,173 +1,145 @@
-    package com.example.calendarapp
+package com.example.calendarapp
 
-    import android.os.Bundle
-    import android.view.View
-    import android.widget.TextView
-    import androidx.fragment.app.Fragment
-    import com.kizitonwose.calendar.view.CalendarView
-    import com.kizitonwose.calendar.core.CalendarDay
-    import com.kizitonwose.calendar.core.firstDayOfWeekFromLocale
-    import com.kizitonwose.calendar.view.MonthDayBinder
-    import com.kizitonwose.calendar.view.ViewContainer
-    import com.kizitonwose.calendar.core.DayPosition
-    import java.time.YearMonth
-    import java.time.LocalDate
-    import java.time.format.DateTimeFormatter
-    import android.app.DatePickerDialog
+import android.app.DatePickerDialog
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.core.view.isVisible
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.calendarapp.databinding.MainOverviewBinding
+import com.kizitonwose.calendar.core.CalendarDay
+import com.kizitonwose.calendar.core.DayPosition
+import com.kizitonwose.calendar.core.firstDayOfWeekFromLocale
+import com.kizitonwose.calendar.view.MonthDayBinder
+import java.time.LocalDate
+import java.time.YearMonth
+import java.time.format.DateTimeFormatter
+import kotlinx.coroutines.launch
 
-    class MainOverviewFragment : Fragment(R.layout.main_overview) {
+class MainOverviewFragment : Fragment() {
+    private var _binding: MainOverviewBinding? = null
+    private val binding get() = _binding!!
+    private val viewModel: CalendarViewModel by activityViewModels()
+    private lateinit var itemAdapter: CalendarItemAdapter
+    private var state = CalendarUiState()
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?,
+    ): View {
+        _binding = MainOverviewBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        var selectedDateKey: String? = null
-        // Obtain references to views declared in that XML file
-        val dateText = view.findViewById<TextView>(R.id.idTVDate)
-        val calendarView = view.findViewById<CalendarView>(R.id.calendarView)
-        val dailySummaryText = view.findViewById<TextView>(R.id.dailySummaryText)
-        // get the start up inital date
-        fun showDate(date: LocalDate) {
-            val dateKey = date.toString()
+        setupEventList()
+        setupCalendar()
+        binding.idTVDate.setOnClickListener { showDatePicker() }
 
-            selectedDateKey = dateKey
-            dateText.text = date.format(
-                DateTimeFormatter.ofPattern("MM/dd/yyyy")
-            )
-            dailySummaryText.text =
-                buildDailySummary(dateKey)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.uiState.collect(::render)
+            }
         }
-        dateText.setOnClickListener {
-            val today = LocalDate.now()
-            DatePickerDialog(requireContext(), { _, year, month, dayOfMonth ->
-                    val pickedDate = LocalDate.of( year, month + 1, dayOfMonth)
-                    showDate(pickedDate)
-                    calendarView.smoothScrollToDate(pickedDate) },
-                today.year, today.monthValue - 1, today.dayOfMonth).show()
+    }
+
+    private fun setupEventList() {
+        itemAdapter = CalendarItemAdapter(
+            onDeleteRequested = viewModel::delete,
+            onEditRequested = { item ->
+                viewModel.requestEdit(item)
+                val destination = when (item) {
+                    is Appointment -> R.id.nav_appointments
+                    is PeriodLog -> R.id.nav_periods
+                    is HabitCheck -> R.id.nav_habits
+                    is Todo -> R.id.nav_todo
+                }
+                findNavController().navigate(destination)
+            },
+            onCompletionChanged = viewModel::toggleComplete,
+        )
+        binding.dailySummaryList.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = itemAdapter
         }
-        showDate(LocalDate.now())
-        calendarView.dayBinder =
-            object : MonthDayBinder<ViewContainer> {
-                override fun create(view: View) = ViewContainer(view)
-                override fun bind(container: ViewContainer, day: CalendarDay){
-                    val dateKey = day.date.toString()
-                    container.view.findViewById<TextView>(R.id.calendarDayText)
-                        .text = day.date.dayOfMonth.toString()
-                    val dayText = container.view.findViewById<TextView>( R.id.calendarDayText )
-                    dayText.text = day.date.dayOfMonth.toString()
+    }
 
-                    if (day.date.toString() == selectedDateKey) { dayText.setBackgroundResource(
-                        R.drawable.date_selector ) }
-                    else {
-                        dayText.setBackgroundResource(0)
-                    }
-                    val appointmentIndicator = container.view.findViewById<View>(R.id.appointmentIndicator)
-                    val periodIndicator=container.view.findViewById<View>(R.id.periodIndicator)
-                    val habitIndicator=container.view.findViewById<View>(R.id.habitIndicator)
-                    val todoIndicator = container.view.findViewById<View>(R.id.todoIndicator)
+    private fun setupCalendar() = with(binding.calendarView) {
+        dayBinder = object : MonthDayBinder<CalendarDayViewContainer> {
+            override fun create(view: View) = CalendarDayViewContainer(view)
 
-                    appointmentIndicator.visibility =
-                        if (appointments.any { it.dateKey == dateKey }) {
-                            View.VISIBLE
-                        } else {
-                            View.GONE
-                        }
+            override fun bind(container: CalendarDayViewContainer, day: CalendarDay) {
+                val dayBinding = container.binding
+                val itemsForDate = state.items.filter { it.dateKey == day.date.toString() }
 
-                    periodIndicator.visibility =
-                        if (periods.any { it.dateKey == dateKey }) {
-                            View.VISIBLE
-                        } else {
-                            View.GONE
-                        }
+                dayBinding.calendarDayRoot.setBackgroundResource(0)
+                dayBinding.calendarDayText.apply {
+                    text = day.date.dayOfMonth.toString()
+                    setBackgroundResource(
+                        if (day.date == state.selectedDate) R.drawable.date_selector else 0,
+                    )
+                }
+                dayBinding.appointmentIndicator.isVisible = itemsForDate.any { it is Appointment }
+                dayBinding.periodIndicator.isVisible = itemsForDate.any { it is PeriodLog }
+                dayBinding.habitIndicator.isVisible = itemsForDate.any { it is HabitCheck }
+                dayBinding.todoIndicator.isVisible = itemsForDate.any { it is Todo }
 
-                    habitIndicator.visibility =
-                        if (habits.any { it.dateKey == dateKey }) {
-                            View.VISIBLE
-                        } else {
-                            View.GONE
-                        }
-                    todoIndicator.visibility =
-                        if (todoList.any { it.dateKey == dateKey }) {
-                            View.VISIBLE
-                        } else {
-                            View.GONE
-                        }
-
-                    container.view.setOnClickListener {
-                        val previousDateKey = selectedDateKey
-                        showDate(day.date)
-                        previousDateKey?.let {
-                            calendarView.notifyDateChanged(
-                                LocalDate.parse(it) )
-                        }
-                        calendarView.notifyDateChanged(day.date)
-
-                        if (day.position != DayPosition.MonthDate) {
-                            calendarView.smoothScrollToMonth( YearMonth.from(day.date) )
-                        }
-                    }
-                    // THis is handling clicks on day
-                    container.view.setOnClickListener {
-                        val previousDateKey = selectedDateKey
-
-                        showDate(day.date)
-
-                        previousDateKey?.let {
-                            calendarView.notifyDateChanged(
-                                LocalDate.parse(it)
-                            )
-                        }
-
-                        calendarView.notifyDateChanged(day.date)
-
-                        if (day.position != DayPosition.MonthDate) {
-                            calendarView.smoothScrollToMonth(
-                                YearMonth.from(day.date)
-                            )
-                        }
+                dayBinding.calendarDayRoot.setOnClickListener {
+                    viewModel.selectDate(day.date)
+                    if (day.position != DayPosition.MonthDate) {
+                        smoothScrollToMonth(YearMonth.from(day.date))
                     }
                 }
             }
+        }
+
         val currentMonth = YearMonth.now()
-        calendarView.setup(
+        setup(
             currentMonth.minusMonths(12),
             currentMonth.plusMonths(12),
-            firstDayOfWeekFromLocale()
+            firstDayOfWeekFromLocale(),
         )
-
-        calendarView.scrollToMonth(currentMonth)
-    }
-        private fun buildDailySummary(dateKey: String): String {
-            val dailyAppointments = appointments.filter { it.dateKey == dateKey }
-            val dailyHabits = habits.filter { it.dateKey == dateKey }
-            val dailyPeriodLogs = periods.filter { it.dateKey == dateKey }
-            val sections = mutableListOf<String>()
-            if (dailyAppointments.isNotEmpty()) {
-                sections.add(
-                    "Appointments\n" +
-                            dailyAppointments.joinToString("\n") {
-                                "\t${it.title}: ${it.time} ${it.meridiem}\n\t\t- ${it.notes}"
-                            })
-            }
-            // need to move into check text view
-            if (dailyHabits.isNotEmpty()) {
-                sections.add(
-                    "Habits\n" +
-                            dailyHabits.joinToString("\n") {
-                                "\t${it.habitName}"
-                            })
-            }
-            // would want to affect the calendar's view
-            if (dailyPeriodLogs.isNotEmpty()) {
-                sections.add(
-                    "Period\n" +
-                            dailyPeriodLogs.joinToString("\n") {
-                                val flowLabel = getString(it.flow.labelRes())
-                                "\t$flowLabel: ${it.notes}"
-                            })
-            }
-            return if (sections.isEmpty()) {
-                "No information for this date"
-            } else {
-                sections.joinToString("\n\n")
-            }
-        }
+        scrollToMonth(currentMonth)
     }
 
+    private fun render(newState: CalendarUiState) {
+        state = newState
+        binding.idTVDate.text = newState.selectedDate.format(DATE_FORMAT)
+        itemAdapter.submitList(newState.itemsForSelectedDate())
+        binding.calendarView.notifyCalendarChanged()
+    }
+
+    private fun showDatePicker() {
+        val selectedDate = state.selectedDate
+        DatePickerDialog(
+            requireContext(),
+            { _, year, month, dayOfMonth ->
+                val date = LocalDate.of(year, month + 1, dayOfMonth)
+                viewModel.selectDate(date)
+                binding.calendarView.smoothScrollToDate(date)
+            },
+            selectedDate.year,
+            selectedDate.monthValue - 1,
+            selectedDate.dayOfMonth,
+        ).show()
+    }
+
+    override fun onDestroyView() {
+        binding.dailySummaryList.adapter = null
+        _binding = null
+        super.onDestroyView()
+    }
+
+    private companion object {
+        val DATE_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
+    }
+}

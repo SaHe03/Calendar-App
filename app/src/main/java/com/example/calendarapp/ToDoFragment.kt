@@ -1,169 +1,181 @@
 package com.example.calendarapp
 
+import android.app.DatePickerDialog
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
-import android.widget.TextView
+import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import com.kizitonwose.calendar.view.CalendarView
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.calendarapp.databinding.TodoFragmentBinding
 import com.kizitonwose.calendar.core.CalendarDay
+import com.kizitonwose.calendar.core.DayPosition
 import com.kizitonwose.calendar.core.firstDayOfWeekFromLocale
 import com.kizitonwose.calendar.view.MonthDayBinder
-import com.kizitonwose.calendar.view.ViewContainer
-import com.kizitonwose.calendar.core.DayPosition
-import java.time.YearMonth
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.format.DateTimeFormatter
-import android.app.DatePickerDialog
-import android.widget.Button
-import android.widget.EditText
-import android.widget.LinearLayout
+import kotlinx.coroutines.launch
 
-class ToDoFragment : Fragment(R.layout.todo_fragment) {
+class ToDoFragment : Fragment() {
+    private var _binding: TodoFragmentBinding? = null
+    private val binding get() = _binding!!
+    private val viewModel: CalendarViewModel by activityViewModels()
+    private lateinit var itemAdapter: CalendarItemAdapter
+    private var state = CalendarUiState()
+    private var editingTodo: Todo? = null
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?,
+    ): View {
+        _binding = TodoFragmentBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        var selectedDateKey: String? = null
-        // Obtain references to views declared in that XML file
-        val dateText = view.findViewById<TextView>(R.id.idTVDate)
-        val calendarView = view.findViewById<CalendarView>(R.id.calendarView)
-        val todoPanelSummary = view.findViewById<LinearLayout>(R.id.ToDoSummaryPanel)
-        val todoSummaryText = view.findViewById<TextView>(R.id.ToDoSummaryText)
-        val todoPanelAddNew= view.findViewById<LinearLayout>(R.id.toDoAddNewPanel)
-        val addToDoButton = view.findViewById<Button>(R.id.addNewToDoButton)
-        val closeToDoButton = view.findViewById<Button>(R.id.closeToDoButton)
-        val addToDoConfirmButton = view.findViewById<Button>(R.id.addToDoConfirmButton)
-        val todoTitleInput = view.findViewById<EditText>(R.id.toDoTitleInput)
-        val todoNotesInput = view.findViewById<EditText>(R.id.toDoNotesInput)
+        setupEventList()
+        setupEditor()
+        setupCalendar()
+        binding.idTVDate.setOnClickListener { showDatePicker() }
 
-        // get the start up inital date
-        addToDoButton.setOnClickListener {
-            todoPanelSummary.visibility = View.GONE
-            todoPanelAddNew.visibility = View.VISIBLE
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.uiState.collect(::render)
+            }
         }
-        closeToDoButton.setOnClickListener {
-            todoPanelAddNew.visibility = View.GONE
-            todoPanelSummary.visibility = View.VISIBLE
+    }
+
+    private fun setupEventList() {
+        itemAdapter = CalendarItemAdapter(
+            onDeleteRequested = viewModel::delete,
+            onEditRequested = viewModel::requestEdit,
+            onCompletionChanged = viewModel::toggleComplete,
+        )
+        binding.todoSummaryList.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = itemAdapter
         }
+    }
+
+    private fun setupEditor() = with(binding) {
+        addNewToDoButton.setOnClickListener { openEditor(null) }
+        closeToDoButton.setOnClickListener { closeEditor() }
         addToDoConfirmButton.setOnClickListener {
-            val dateKey = selectedDateKey ?: return@setOnClickListener
-            val titleInput = todoTitleInput.text.toString().trim()
-            var noteInput = todoNotesInput.text.toString().trim()
-            if (titleInput.isBlank()) {
-               todoTitleInput.error = "Enter a Todo"
+            val title = toDoTitleInput.text.toString().trim()
+            if (title.isBlank()) {
+                toDoTitleInput.error = "Enter a to-do"
                 return@setOnClickListener
             }
-
-            todoSummaryText.text = buildToDoSummary(dateKey)
-            calendarView.notifyDateChanged(LocalDate.parse(dateKey))
-            todoList.add(Todo(dateKey, titleInput, noteInput, false))
-            todoTitleInput.text.clear()
-            todoNotesInput.text.clear()
-            todoPanelAddNew.visibility = View.GONE
-            todoPanelSummary.visibility = View.VISIBLE
-        }
-
-
-        fun showDate(date: LocalDate) {
-            val dateKey = date.toString()
-
-            selectedDateKey = dateKey
-            dateText.text = date.format(
-                DateTimeFormatter.ofPattern("MM/dd/yyyy")
+            val previous = editingTodo
+            val todo = Todo(
+                dateKey = previous?.dateKey ?: state.selectedDateKey,
+                title = title,
+                notes = toDoNotesInput.text.toString().trim().ifBlank { "No notes" },
+                isComplete = previous?.isComplete ?: false,
+                id = previous?.id ?: 0,
             )
-            todoSummaryText.text = buildToDoSummary(dateKey)
+            if (previous == null) viewModel.add(todo) else viewModel.update(todo)
+            closeEditor()
         }
-        dateText.setOnClickListener {
-            val today = LocalDate.now()
-            DatePickerDialog(requireContext(), { _, year, month, dayOfMonth ->
-                val pickedDate = LocalDate.of( year, month + 1, dayOfMonth)
-                showDate(pickedDate)
-                calendarView.smoothScrollToDate(pickedDate) },
-                today.year, today.monthValue - 1, today.dayOfMonth).show()
-        }
-        showDate(LocalDate.now())
-        calendarView.dayBinder =
-            object : MonthDayBinder<ViewContainer> {
-                override fun create(view: View) = ViewContainer(view)
-                override fun bind(container: ViewContainer, day: CalendarDay){
-                    val dateKey = day.date.toString()
-                    container.view.findViewById<TextView>(R.id.calendarDayText)
-                        .text = day.date.dayOfMonth.toString()
-                    val dayText = container.view.findViewById<TextView>( R.id.calendarDayText )
-                    dayText.text = day.date.dayOfMonth.toString()
+    }
 
-                    if (day.date.toString() == selectedDateKey) { dayText.setBackgroundResource(
-                        R.drawable.date_selector ) }
-                    else {
-                        dayText.setBackgroundResource(0)
-                    }
-                    val todoIndicator = container.view.findViewById<View>(R.id.todoIndicator)
+    private fun openEditor(todo: Todo?) = with(binding) {
+        editingTodo = todo
+        toDoTitleInput.setText(todo?.title.orEmpty())
+        toDoNotesInput.setText(todo?.notes.orEmpty())
+        addToDoConfirmButton.setText(
+            if (todo == null) R.string.add_todo_text else R.string.save_changes,
+        )
+        todoSummaryPanel.isVisible = false
+        toDoAddNewPanel.isVisible = true
+    }
 
-                    todoIndicator.visibility =
-                        if (todoList.any { it.dateKey == dateKey }) {
-                            View.VISIBLE
-                        } else {
-                            View.GONE
-                        }
-                    container.view.setOnClickListener {
-                        val previousDateKey = selectedDateKey
-                        showDate(day.date)
-                        previousDateKey?.let {
-                            calendarView.notifyDateChanged(
-                                LocalDate.parse(it) )
-                        }
-                        calendarView.notifyDateChanged(day.date)
+    private fun closeEditor() {
+        editingTodo = null
+        viewModel.clearEditRequest()
+        binding.toDoAddNewPanel.isVisible = false
+        binding.todoSummaryPanel.isVisible = true
+    }
 
-                        if (day.position != DayPosition.MonthDate) {
-                            calendarView.smoothScrollToMonth( YearMonth.from(day.date) )
-                        }
-                    }
-                    // THis is handling clicks on day
-                    container.view.setOnClickListener {
-                        val previousDateKey = selectedDateKey
+    private fun setupCalendar() = with(binding.calendarView) {
+        dayBinder = object : MonthDayBinder<CalendarDayViewContainer> {
+            override fun create(view: View) = CalendarDayViewContainer(view)
 
-                        showDate(day.date)
-
-                        previousDateKey?.let {
-                            calendarView.notifyDateChanged(
-                                LocalDate.parse(it)
-                            )
-                        }
-
-                        calendarView.notifyDateChanged(day.date)
-
-                        if (day.position != DayPosition.MonthDate) {
-                            calendarView.smoothScrollToMonth(
-                                YearMonth.from(day.date)
-                            )
-                        }
+            override fun bind(container: CalendarDayViewContainer, day: CalendarDay) {
+                val dayBinding = container.binding
+                val hasTodo = state.items.any {
+                    it is Todo && it.dateKey == day.date.toString()
+                }
+                dayBinding.calendarDayRoot.setBackgroundResource(0)
+                dayBinding.calendarDayText.apply {
+                    text = day.date.dayOfMonth.toString()
+                    setBackgroundResource(
+                        if (day.date == state.selectedDate) R.drawable.date_selector else 0,
+                    )
+                }
+                dayBinding.appointmentIndicator.isVisible = false
+                dayBinding.periodIndicator.isVisible = false
+                dayBinding.habitIndicator.isVisible = false
+                dayBinding.todoIndicator.isVisible = hasTodo
+                dayBinding.calendarDayRoot.setOnClickListener {
+                    viewModel.selectDate(day.date)
+                    if (day.position != DayPosition.MonthDate) {
+                        smoothScrollToMonth(YearMonth.from(day.date))
                     }
                 }
             }
+        }
         val currentMonth = YearMonth.now()
-        calendarView.setup(
+        setup(
             currentMonth.minusMonths(12),
             currentMonth.plusMonths(12),
-            firstDayOfWeekFromLocale()
+            firstDayOfWeekFromLocale(),
         )
-
-        calendarView.scrollToMonth(currentMonth)
+        scrollToMonth(currentMonth)
     }
-    private fun buildToDoSummary(dateKey: String): String {
-        val dailyToDos = todoList.filter { it.dateKey == dateKey }
-        val sections = mutableListOf<String>()
-        if (dailyToDos.isNotEmpty()) {
-            sections.add(
-                "To-dos\n" +
-                        dailyToDos.joinToString("\n") {
-                            "\t${it.title}: ${it.notes} + ${it.isComplete}"
-                        })
-        }
-        return if (sections.isEmpty()) {
-            "No information for this date"
-        } else {
-            sections.joinToString("\n\n")
+
+    private fun render(newState: CalendarUiState) {
+        state = newState
+        binding.idTVDate.text = newState.selectedDate.format(DATE_FORMAT)
+        itemAdapter.submitList(newState.itemsForSelectedDate().filterIsInstance<Todo>())
+        binding.calendarView.notifyCalendarChanged()
+
+        val requestedEdit = newState.editingItem as? Todo
+        if (requestedEdit != null && editingTodo?.id != requestedEdit.id) {
+            openEditor(requestedEdit)
         }
     }
 
+    private fun showDatePicker() {
+        val selectedDate = state.selectedDate
+        DatePickerDialog(
+            requireContext(),
+            { _, year, month, dayOfMonth ->
+                val date = LocalDate.of(year, month + 1, dayOfMonth)
+                viewModel.selectDate(date)
+                binding.calendarView.smoothScrollToDate(date)
+            },
+            selectedDate.year,
+            selectedDate.monthValue - 1,
+            selectedDate.dayOfMonth,
+        ).show()
+    }
+
+    override fun onDestroyView() {
+        binding.todoSummaryList.adapter = null
+        _binding = null
+        super.onDestroyView()
+    }
+
+    private companion object {
+        val DATE_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
+    }
 }
-
-

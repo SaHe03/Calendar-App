@@ -21,7 +21,7 @@ The add button should replace the summary box with it's own panel
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainOverviewFragment"
+    tools:context=".PeriodFragment"
     >
     <TextView
         android:id="@+id/idTVDate"
@@ -30,7 +30,7 @@ The add button should replace the summary box with it's own panel
         android:layout_margin="8dp"
         android:gravity="center"
         android:padding="8dp"
-        android:text="Current Date"
+        android:text="@string/calendar_date"
         android:textAlignment="center"
         android:textColor="@color/black"
         android:textSize="20sp"
@@ -58,16 +58,14 @@ The add button should replace the summary box with it's own panel
         android:orientation="vertical"
         android:layout_below="@id/calendarView"
         >
-        <TextView
-            android:id="@+id/periodSummaryText"
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/periodSummaryList"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
             android:layout_margin="16dp"
-            android:padding="12dp"
-            android:gravity="start"
-            android:textColor="@color/black"
-            android:textSize="16sp" />
+            android:clipToPadding="false"
+            android:padding="12dp" />
         <Button
             android:id="@+id/addPeriodButton"
             android:layout_width="wrap_content"
@@ -75,7 +73,7 @@ The add button should replace the summary box with it's own panel
             android:layout_gravity="end"
             android:layout_marginEnd="16dp"
             android:layout_marginBottom="32dp"
-            android:text="+"
+            android:text="@string/action_add"
             />
     </LinearLayout>
     <LinearLayout
@@ -91,14 +89,14 @@ The add button should replace the summary box with it's own panel
             android:layout_width="wrap_content"
             android:layout_height="40dp"
             android:layout_gravity="end"
-            android:text="X"
+            android:text="@string/action_close"
             />
         <TextView
             android:id="@+id/flowPrompter"
             android:layout_width="200dp"
             android:layout_height="40dp"
             android:layout_gravity="start"
-            android:hint="How's the Flow"
+            android:hint="@string/period_flow_prompter"
             />
         <Spinner
             android:id="@+id/flowSpinner"
@@ -112,7 +110,7 @@ The add button should replace the summary box with it's own panel
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="16dp"
-            android:hint="Notes on cramps or behavior"
+            android:hint="@string/notes_prompter"
             android:inputType="text"
             />
 
@@ -121,7 +119,7 @@ The add button should replace the summary box with it's own panel
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end"
-            android:text="Add period data"
+            android:text="@string/add_period_text"
             />
 
     </LinearLayout>

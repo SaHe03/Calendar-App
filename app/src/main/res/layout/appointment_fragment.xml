@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainOverviewFragment"
+    tools:context=".AppointmentFragment"
     >
     <!--text view for displaying the selected date
         Blue is an appointment color
@@ -16,7 +16,7 @@
         android:layout_margin="8dp"
         android:gravity="center"
         android:padding="8dp"
-        android:text="Current Date"
+        android:text="@string/calendar_date"
         android:textAlignment="center"
         android:textColor="@color/black"
         android:textSize="20sp"
@@ -44,15 +44,13 @@
         android:layout_below="@id/calendarView"
         >
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/apptSummaryText"
+            android:id="@+id/apptSummaryList"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
             android:layout_margin="16dp"
-            android:padding="12dp"
-            android:gravity="start"
-            android:textColor="@color/black"
-            android:textSize="16sp" />
+            android:clipToPadding="false"
+            android:padding="12dp" />
         <Button
             android:id="@+id/addApptButton"
             android:layout_width="wrap_content"
@@ -60,7 +58,7 @@
             android:layout_gravity="end"
             android:layout_marginEnd="16dp"
             android:layout_marginBottom="32dp"
-            android:text="+"
+            android:text="@string/action_add"
             />
     </LinearLayout>
     <LinearLayout
@@ -75,29 +73,30 @@
             android:id="@+id/closeApptButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="right"
-            android:text="X"/>
+            android:layout_gravity="end"
+            android:text="@string/action_close"/>
         <EditText
             android:id="@+id/appointmentTitleInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="16dp"
-            android:hint="Appointment title"
+            android:hint="@string/appointment_prompter"
             android:inputType="text" />
         <EditText
             android:id="@+id/appointmentNotesInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="16dp"
-            android:hint="Any other notes?"
+            android:hint="@string/notes_prompter"
             android:inputType="text" />
         <EditText
             android:id="@+id/appointmentTimeInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="16dp"
-            android:hint="Time, such as 11:30 AM"
+            android:hint="@string/time_prompter"
             android:inputType="time" />
+
         <Spinner
             android:id="@+id/meridiem_Spinner"
             android:layout_width="wrap_content"
@@ -111,6 +110,6 @@
             android:layout_gravity="end"
             android:layout_marginEnd="16dp"
             android:layout_marginBottom="32dp"
-            android:text="Add appointment" />
+            android:text="@string/add_appointment_text" />
     </LinearLayout>
 </RelativeLayout>

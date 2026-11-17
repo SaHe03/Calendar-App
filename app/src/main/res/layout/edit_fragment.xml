@@ -7,15 +7,15 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
-            android:visibility="gone"
             android:gravity="center"
+            android:visibility="gone"
             >
             <Button
                 android:id="@+id/closeEditorButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="right"
-                android:text="X"/>
+                android:layout_gravity="end"
+                android:text="@string/action_close"/>
             <Button
                 android:id="@+id/addEditedEventConfirmButton"
                 android:layout_width="wrap_content"
@@ -23,36 +23,14 @@
                 android:layout_gravity="end"
                 android:layout_marginEnd="16dp"
                 android:layout_marginBottom="32dp"
-                android:text="Make Edits" />
-            <EditText
-                android:id="@+id/editedTitleInput"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
-                android:hint="Change the Topic"
-                android:inputType="text" />
-            <EditText
-                android:id="@+id/editedNotesInput"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
-                android:hint="If there is a note? (This is replace existing notes)"
-                android:inputType="text" />
-            <EditText
-                android:visibility="gone"
-                android:id="@+id/editedTimeInput"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
-                android:hint="Time Changed"
-                android:inputType="time" />
+                android:text="@string/edit_confirm" />
             <Spinner
-                android:visibility="gone"
-                android:id="@+id/meridiem_Spinner"
-                android:layout_width="wrap_content"
+                android:id="@+id/editedSpinner"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:entries="@array/meridiem_Spinner_Options"/>
-
+                android:layout_marginHorizontal="16dp"
+                android:hint="@string/edit_type_prompter"
+                android:entries="@array/edit_Spinner_Options" />
         </LinearLayout>
     </RelativeLayout>
 
